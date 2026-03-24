@@ -1,41 +1,173 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id  Int @id @default(autoincrement())
-  username String @unique
-  password String
-  isBlogger Boolean
-  posts Post[]
-
-  comments Comment[]
+enum ThreadStatus {
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
 }
 
-model Post {
-  id  Int @id @default(autoincrement())
-  timestamp DateTime @default(now())
-  isPublished Boolean @default(false)
-  header String @unique
-  text String
-  blogger User @relation(fields: [blogger_id], references: [id])
-  blogger_id Int
-
-  comments Comment[]
+enum SenderType {
+  OPERATOR
+  CUSTOMER
+  SYSTEM
 }
 
+enum IntakeStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+}
 
-model Comment{
-  id  Int @id @default(autoincrement())
-  timestamp DateTime @default(now())
-  text String
-  user User @relation(fields: [userId], references: [id])
-  post Post @relation(fields: [postId], references: [id])
-  userId Int
-  postId Int
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Operator {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  email     String    @unique
+  password  String
+  name      String
+  languages String[]
+  messages  Message[]
+  threads   Thread[]
+}
+
+model Customer {
+  id      Int      @id @default(autoincrement())
+  email   String?
+  name    String?
+  threads Thread[]
+  orders  Order[]
+  intakes Intake[]
+}
+
+model Thread {
+  id               Int                     @id @default(autoincrement())
+  status           ThreadStatus            @default(OPEN)
+  created_at       DateTime                @default(now())
+  last_message_at  DateTime?
+  customer_id      Int?
+  session_id       String?
+  assigned_to      Int?
+  customer         Customer?               @relation(fields: [customer_id], references: [id])
+  assignedOperator Operator?               @relation(fields: [assigned_to], references: [id])
+  messages         Message[]
+  paintState       ThreadPaintState?
+  snapshot         SessionContextSnapshot?
+  intakes          Intake[]
+}
+
+model Message {
+  id            Int           @id @default(autoincrement())
+  text_original String
+  lang_detected String?
+  sender        SenderType
+  created_at    DateTime      @default(now())
+  thread_id     Int
+  operator_id   Int?
+  thread        Thread        @relation(fields: [thread_id], references: [id])
+  operator      Operator?     @relation(fields: [operator_id], references: [id])
+  files         MessageFile[]
+}
+
+model ThreadPaintState {
+  thread_id                 Int      @id
+  context_scores            Json
+  last_processed_message_id Int?
+  updated_at                DateTime @updatedAt
+  base_color_h              Float
+  base_color_s              Float
+  base_color_v              Float
+  thread                    Thread   @relation(fields: [thread_id], references: [id])
+}
+
+model SessionContextSnapshot {
+  id              Int       @id @default(autoincrement())
+  country         String?
+  city            String?
+  local_time      DateTime?
+  url_trail       Json?
+  cart_snapshot   Json?
+  sentiment_label String?
+  sentiment_conf  Float?
+  updated_at      DateTime  @updatedAt
+  thread_id       Int       @unique
+  thread          Thread    @relation(fields: [thread_id], references: [id])
+}
+
+model Order {
+  id          Int        @id @default(autoincrement())
+  status      String
+  created_at  DateTime   @default(now())
+  customer_id Int
+  customer    Customer   @relation(fields: [customer_id], references: [id])
+  shipments   Shipment[]
+  intakes     Intake[]
+}
+
+model Shipment {
+  id           Int       @id @default(autoincrement())
+  carrier      String
+  tracking_no  String
+  last_status  String
+  last_seen_at DateTime?
+  order_id     Int
+  order        Order     @relation(fields: [order_id], references: [id])
+}
+
+model Intake {
+  id           Int          @id @default(autoincrement())
+  email        String
+  device_model String?
+  country      String?
+  summary      String
+  difficulty   Difficulty?
+  created_at   DateTime     @default(now())
+  status       IntakeStatus @default(NEW)
+  order_id     Int?
+  thread_id    Int?
+  customer_id  Int?
+  order        Order?       @relation(fields: [order_id], references: [id])
+  thread       Thread?      @relation(fields: [thread_id], references: [id])
+  customer     Customer?    @relation(fields: [customer_id], references: [id])
+  files        IntakeFile[]
+}
+
+model File {
+  id          Int           @id @default(autoincrement())
+  name        String
+  mime        String
+  size        Int
+  storage_url String
+  created_at  DateTime      @default(now())
+  messages    MessageFile[]
+  intakes     IntakeFile[]
+}
+
+model MessageFile {
+  message_id Int
+  file_id    Int
+  message    Message @relation(fields: [message_id], references: [id])
+  file       File    @relation(fields: [file_id], references: [id])
+
+  @@id([message_id, file_id])
+}
+
+model IntakeFile {
+  intake_id Int
+  file_id   Int
+  intake    Intake @relation(fields: [intake_id], references: [id])
+  file      File   @relation(fields: [file_id], references: [id])
+
+  @@id([intake_id, file_id])
 }

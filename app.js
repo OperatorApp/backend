@@ -1,29 +1,34 @@
-const express = require("express")
 require("dotenv").config()
-const session = require("express-session")
-const passport = require("./config/passport")
-
-
+const express = require("express")
+const { createServer } = require("node:http")
+const { Server } = require("socket.io")
+const cors = require("cors")
 const authRoutes = require("./routes/auth")
+const threadRoutes = require("./routes/thread")
+const apicache = require('apicache');
 
 const app = express()
+const server = createServer(app)
 
-app.set("view engine", "ejs")
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST"]
+    }
+})
 
+let cache = apicache.middleware;
+
+app.use(cors({ origin: "http://localhost:5173" }))
+app.use(cache('10 minutes'));
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
-app.use(express.static("public"))
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 * 24 }
-}))
-app.use(passport.initialize())
-app.use(passport.session())
-
 
 app.use("/auth", authRoutes)
+app.use("/thread", threadRoutes)
 
-const PORT = process.env.PORT || 3001
-app.listen(PORT, () => console.log(`Listening on port ${PORT}`))
+require("./config/socket")(io)
+
+server.listen(process.env.PORT, () => console.log(`Listening on port ${process.env.PORT}`))
+
+module.exports = { io }

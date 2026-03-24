@@ -1,6 +1,6 @@
-import "dotenv/config";
+require("dotenv").config()
 
-export default {
+module.exports = {
     schema: "models/schema.prisma",
     migrations: {
         path: "prisma/migrations",
@@ -8,4 +8,4 @@ export default {
     datasource: {
         url: process.env.DATABASE_URL,
     },
-};
+}
