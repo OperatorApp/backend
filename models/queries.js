@@ -56,6 +56,12 @@ const getCustomerByEmail = async (email) => {
     })
 }
 
+const getCustomerByName = async (name) =>{
+    return prisma.customer.findFirst({
+        where: { name }
+    })
+}
+
 // ── Threads ────────────────────────────────────────────
 
 const createThread = async (customerId, sessionId) => {
@@ -107,10 +113,19 @@ const updateThreadStatus = async (threadId, status) => {
     })
 }
 
+const getThreadByCustomerId = async (customer_id) => {
+    return prisma.thread.findFirst(
+        {
+            where: {customer_id}
+        }
+    )
+}
+
 // ── Messages ───────────────────────────────────────────
 
 const createMessage = async (threadId, text, sender, operatorId = null, langDetected = null) => {
-    return prisma.message.create({
+    console.log(`createMessage: creating message for thread ${threadId}, sender ${sender}`)
+    const result = await prisma.message.create({
         data: {
             thread_id: threadId,
             text_original: text,
@@ -119,14 +134,19 @@ const createMessage = async (threadId, text, sender, operatorId = null, langDete
             lang_detected: langDetected
         }
     })
+    console.log(`createMessage: successfully created message with ID ${result.id}`)
+    return result
 }
 
 const getMessagesByThreadId = async (threadId) => {
-    return prisma.message.findMany({
+    console.log(`getMessagesByThreadId: fetching messages for thread ${threadId}`)
+    const messages = await prisma.message.findMany({
         where: { thread_id: threadId },
         include: { operator: true },
         orderBy: { created_at: "asc" }
     })
+    console.log(`getMessagesByThreadId: found ${messages.length} messages for thread ${threadId}`)
+    return messages
 }
 
 const getMessageById = async (id) => {
@@ -162,5 +182,7 @@ module.exports = {
     createMessage,
     getMessagesByThreadId,
     getMessageById,
-    updateThreadLastMessage
+    updateThreadLastMessage,
+    getCustomerByName,
+    getThreadByCustomerId
 }

@@ -3,6 +3,7 @@ const {saveMessageSer} = require("../service/realTimeChatService");
 
 const saveMessage = async (socket, io, data) => {
     try {
+        console.log("incoming message:", data)
         const saved = await saveMessageSer(data)
         io.to(`thread_${data.thread_id}`).emit("message", {
             success: true,
@@ -11,7 +12,7 @@ const saveMessage = async (socket, io, data) => {
         })
     } catch (err) {
         console.error("saveMessage error:", err)
-        socket.to(`thread_${data.thread_id}`).emit("message", {
+        io.to(`thread_${data.thread_id}`).emit("message", {
             success: false,
             event: "new_message",
             error: "Failed to save message"

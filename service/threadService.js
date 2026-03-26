@@ -14,9 +14,10 @@ async function getThreadByIdSer(id) {
 }
 
 async function getThreadByIdMessagesSer(id) {
-    const messages = await query.getMessagesByThreadId(id)
-    if (!messages) throw new Error("No messages found")
-    return messages
+    console.log(`getThreadByIdMessagesSer: fetching messages for thread ${id}`)
+    const result = await query.getMessagesByThreadId(id)
+    console.log(`getThreadByIdMessagesSer: returning ${result.length} messages for thread ${id}`)
+    return result
 }
 
 async function postThreadSer(customerId, sessionId) {
@@ -35,11 +36,25 @@ async function patchThreadAssign(thread_id, operatorId) {
     return thread
 }
 
+async function getThreadByUsernameSer(username) {
+    let customer = await query.getCustomerByName(username)
+    if (!customer) {
+        customer = await query.createCustomer("", username)
+    }
+    let thread = await query.getThreadByCustomerId(customer.id)
+    if (!thread) {
+        thread = await query.createThread(customer.id, null)
+    }
+
+    return thread
+}
+
 module.exports={
     getThreadsSer,
     getThreadByIdSer,
     getThreadByIdMessagesSer,
     postThreadSer,
     patchThreadAssign,
-    patchThreadStatus
+    patchThreadStatus,
+    getThreadByUsernameSer
 }

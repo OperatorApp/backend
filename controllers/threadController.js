@@ -16,7 +16,9 @@ const postThread = async (req, res) => {
 
 const getThreadByIdMessages = async (req, res) => {
     try {
+        console.log(`getThreadByIdMessages: endpoint called for thread ${req.params.id}`)
         const messages = await threadService.getThreadByIdMessagesSer(Number(req.params.id))
+        console.log(`getThreadByIdMessages: returning ${messages.length} messages`)
         res.json({ success: true, data: messages })
     } catch (err) {
         console.error(THREAD_ERROR, err)
@@ -46,7 +48,7 @@ const getThreads = async (req, res) => {
 
 const patchAssign = async (req, res) => {
     try {
-        const thread = await threadService.patchThreadAssign(Number(req.params.id), req.body.operatorId)
+        const thread = await threadService.patchThreadAssign(Number(req.body.id), req.body.operatorId)
         res.json({ success: true, data: thread })
     } catch (err) {
         console.error(THREAD_ERROR, err)
@@ -56,7 +58,18 @@ const patchAssign = async (req, res) => {
 
 const patchStatus = async (req, res) => {
     try {
-        const thread = await threadService.patchThreadStatus(Number(req.params.id), req.body.status)
+        const thread = await threadService.patchThreadStatus(Number(req.body.id), req.body.status)
+        res.json({ success: true, data: thread })
+    } catch (err) {
+        console.error(THREAD_ERROR, err)
+        res.status(ERROR_STATUS).json({ success: false, error: err.message })
+    }
+}
+
+
+const getThreadByUsername = async (req, res) => {
+    try {
+        const thread = await threadService.getThreadByUsernameSer(req.params.username)
         res.json({ success: true, data: thread })
     } catch (err) {
         console.error(THREAD_ERROR, err)
@@ -70,5 +83,6 @@ module.exports = {
     getThreadById,
     getThreads,
     patchAssign,
-    patchStatus
+    patchStatus,
+    getThreadByUsername
 }
