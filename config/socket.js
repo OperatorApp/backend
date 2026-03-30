@@ -3,7 +3,6 @@ const realTimeChatController = require("../controllers/realTimeChatController")
 module.exports = (io) => {
     io.on("connection", (socket) => {
         console.log("client connected", socket.id)
-
         socket.on("join_thread", (threadId) => {
             socket.join(`thread_${threadId}`)
         })

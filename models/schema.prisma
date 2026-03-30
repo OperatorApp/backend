@@ -68,16 +68,17 @@ model Thread {
 }
 
 model Message {
-  id            Int           @id @default(autoincrement())
-  text_original String
-  lang_detected String?
-  sender        SenderType
-  created_at    DateTime      @default(now())
-  thread_id     Int
-  operator_id   Int?
-  thread        Thread        @relation(fields: [thread_id], references: [id])
-  operator      Operator?     @relation(fields: [operator_id], references: [id])
-  files         MessageFile[]
+  id              Int           @id @default(autoincrement())
+  text_original   String
+  text_translated String        @default("")
+  lang_detected   String?
+  sender          SenderType
+  created_at      DateTime      @default(now())
+  thread_id       Int
+  operator_id     Int?
+  thread          Thread        @relation(fields: [thread_id], references: [id])
+  operator        Operator?     @relation(fields: [operator_id], references: [id])
+  files           MessageFile[]
 }
 
 model ThreadPaintState {

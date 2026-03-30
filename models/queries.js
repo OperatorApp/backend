@@ -92,7 +92,7 @@ const getAllThreads = async () => {
             assignedOperator: true,
             messages: {
                 orderBy: { created_at: "desc" },
-                take: 1  // last message only for preview
+                take: 1
             }
         },
         orderBy: { last_message_at: "desc" }

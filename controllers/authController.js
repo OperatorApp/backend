@@ -25,7 +25,6 @@ const signup = async (req, res) => {
 }
 
 const logout = (req, res) => {
-    // JWT is stateless — logout is handled client side by deleting the token
     res.json({ success: true, data: {} })
 }
 

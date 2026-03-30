@@ -39,6 +39,7 @@ const getThreadById = async (req, res) => {
 const getThreads = async (req, res) => {
     try {
         const threads = await threadService.getThreadsSer()
+        console.log(threads)
         res.json({ success: true, data: threads })
     } catch (err) {
         console.error(THREAD_ERROR, err)

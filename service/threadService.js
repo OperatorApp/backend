@@ -21,7 +21,11 @@ async function getThreadByIdMessagesSer(id) {
 }
 
 async function postThreadSer(customerId, sessionId) {
-    return await query.createThread(customerId, sessionId)
+    let thread = await query.getThreadByCustomerId(customerId)
+    if (!thread) {
+        thread = await query.createThread(customerId, sessionId)
+    }
+    return thread
 }
 
 async function patchThreadStatus(thread_id, status) {
