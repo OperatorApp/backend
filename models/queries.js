@@ -77,7 +77,9 @@ const getThreadById = async (id) => {
     return prisma.thread.findUnique({
         where: { id },
         include: {
-            messages: true,
+            messages: {
+                orderBy: { created_at: 'asc' }
+            },
             customer: true,
             assignedOperator: true,
             snapshot: true
@@ -93,7 +95,8 @@ const getAllThreads = async () => {
             messages: {
                 orderBy: { created_at: "desc" },
                 take: 1
-            }
+            },
+            snapshot: true
         },
         orderBy: { last_message_at: "desc" }
     })
@@ -124,7 +127,6 @@ const getThreadByCustomerId = async (customer_id) => {
 // ── Messages ───────────────────────────────────────────
 
 const createMessage = async (threadId, text, sender, operatorId = null, langDetected = null) => {
-    console.log(`createMessage: creating message for thread ${threadId}, sender ${sender}`)
     const result = await prisma.message.create({
         data: {
             thread_id: threadId,
@@ -164,6 +166,39 @@ const updateThreadLastMessage = async (threadId) => {
     })
 }
 
+// ── Snapshots ─────────────────────────────────────────
+
+const getSnapshotByThreadId = async (threadId) => {
+    return prisma.sessionContextSnapshot.findUnique({
+        where: { thread_id: threadId }
+    })
+}
+
+const upsertSnapshot = async (threadId, snapshot) => {
+    return prisma.sessionContextSnapshot.upsert({
+        where: { thread_id: threadId },
+        update: {
+            country: snapshot.country,
+            city: snapshot.city,
+            local_time: snapshot.local_time,
+            url_trail: snapshot.url_trail,
+            cart_snapshot: snapshot.cart_snapshot,
+            sentiment_label: snapshot.sentiment_label,
+            sentiment_conf: snapshot.sentiment_conf
+        },
+        create: {
+            thread_id: threadId,
+            country: snapshot.country,
+            city: snapshot.city,
+            local_time: snapshot.local_time,
+            url_trail: snapshot.url_trail,
+            cart_snapshot: snapshot.cart_snapshot,
+            sentiment_label: snapshot.sentiment_label,
+            sentiment_conf: snapshot.sentiment_conf
+        }
+    })
+}
+
 module.exports = {
     prisma,
     createOperator,
@@ -184,5 +219,7 @@ module.exports = {
     getMessageById,
     updateThreadLastMessage,
     getCustomerByName,
-    getThreadByCustomerId
+    getThreadByCustomerId,
+    getSnapshotByThreadId,
+    upsertSnapshot
 }

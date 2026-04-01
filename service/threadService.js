@@ -29,9 +29,7 @@ async function postThreadSer(customerId, sessionId) {
 }
 
 async function patchThreadStatus(thread_id, status) {
-    const thread = await query.updateThreadStatus(thread_id, status)
-    if (!thread) throw new Error("Thread not found")
-    return thread
+    return await query.updateThreadStatus(thread_id, status)
 }
 
 async function patchThreadAssign(thread_id, operatorId) {

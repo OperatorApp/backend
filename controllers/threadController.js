@@ -59,11 +59,19 @@ const patchAssign = async (req, res) => {
 
 const patchStatus = async (req, res) => {
     try {
-        const thread = await threadService.patchThreadStatus(Number(req.body.id), req.body.status)
+        const thread = await threadService.patchThreadStatus(
+            Number(req.params.id),
+            req.body.status
+        )
         res.json({ success: true, data: thread })
     } catch (err) {
         console.error(THREAD_ERROR, err)
-        res.status(ERROR_STATUS).json({ success: false, error: err.message })
+
+        if (err.code === "P2025") {
+            return res.status(404).json({ success: false, error: "Thread not found" })
+        }
+
+        return res.status(400).json({ success: false, error: err.message })
     }
 }
 

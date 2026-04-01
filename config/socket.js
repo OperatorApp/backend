@@ -14,5 +14,13 @@ module.exports = (io) => {
         socket.on("disconnect", () => {
             console.log("disconnected", socket.id)
         })
+
+        socket.on("join_operator_threads", () => {
+            socket.join("operators")
+        })
+
+        socket.on("leave_operator_threads", () => {
+            socket.leave("operators")
+        })
     })
 }

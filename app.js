@@ -18,15 +18,15 @@ const io = new Server(server, {
     }
 })
 
-let cache = apicache.middleware;
+//let cache = apicache.middleware;
 
 app.use(cors({ origin: ["http://localhost:5174", "http://localhost:5173"], credentials: true }))
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
-app.use(cache('10 minutes', (_req) => {
-    return !_req.url.includes('/messages')
-}))
+// app.use(cache('10 minutes', (_req) => {
+//     return !_req.url.includes('/messages')
+// }))
 
 app.use("/auth", authRoutes)
 app.use("/thread", threadRoutes)
