@@ -5,8 +5,7 @@ const { Server } = require("socket.io")
 const cors = require("cors")
 const authRoutes = require("./routes/auth")
 const threadRoutes = require("./routes/thread")
-const apicache = require('apicache');
-
+const aiRoutes = require("./routes/ai")
 const app = express()
 const server = createServer(app)
 
@@ -18,18 +17,16 @@ const io = new Server(server, {
     }
 })
 
-//let cache = apicache.middleware;
 
 app.use(cors({ origin: ["http://localhost:5174", "http://localhost:5173"], credentials: true }))
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
-// app.use(cache('10 minutes', (_req) => {
-//     return !_req.url.includes('/messages')
-// }))
+
 
 app.use("/auth", authRoutes)
 app.use("/thread", threadRoutes)
+app.use("/ai", aiRoutes)
 
 require("./config/socket")(io)
 

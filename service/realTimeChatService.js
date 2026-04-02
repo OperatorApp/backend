@@ -1,8 +1,9 @@
 const query = require("../models/queries")
-
+const { translateAndDetect } = require("./aiService")
+const {getCurrentOperatorLanguage} = require("./operatorService")
 
 const saveMessageSer = async (message) => {
-    const { thread_id, text, sender, snapshot =null, operator_id = null, lang_detected = null } = message
+    const { thread_id, text, sender, snapshot = null, operator_id = null } = message
     if (!sender) {
         throw new Error("Sender is required")
     }
@@ -12,7 +13,32 @@ const saveMessageSer = async (message) => {
     if (!validSenderTypes.includes(senderType)) {
         throw new Error(`Invalid sender type: ${senderType}. Must be one of: ${validSenderTypes.join(', ')}`)
     }
-    const saved = await query.createMessage(thread_id, text, senderType, operator_id, lang_detected)
+
+    let translatedText = ""
+    let detectedLang = null
+
+    try {
+        if (senderType === "CUSTOMER") {
+            const result = await translateAndDetect(text, getCurrentOperatorLanguage())
+            translatedText = result.translation
+            detectedLang = result.detected_lang
+        } else if (senderType === "OPERATOR") {
+            const customerLang = await query.getLastCustomerLang(thread_id)
+            console.log("Customer lang for thread", thread_id, ":", customerLang)
+            if (customerLang) {
+                const result = await translateAndDetect(text, customerLang)
+                console.log("Translation result:", result)
+                translatedText = result.translation
+                detectedLang = result.detected_lang
+            } else {
+                console.log("No customer language found, skipping translation")
+            }
+        }
+    } catch (err) {
+        console.error("Translation failed, saving without translation:", err)
+    }
+
+    const saved = await query.createMessage(thread_id, text, senderType, operator_id, detectedLang, translatedText)
     await query.updateThreadLastMessage(thread_id)
 
     let snapshotChanged = false
@@ -21,10 +47,8 @@ const saveMessageSer = async (message) => {
         snapshotChanged = await saveSnapshotSer(thread_id, snapshot)
     }
 
-    return { ...saved, snapshot, snapshotChanged }
+    return { ...saved, thread_id, snapshot, snapshotChanged }
 }
-
-
 const saveSnapshotSer = async (thread_id, snapshot) => {
     const existing = await query.getSnapshotByThreadId(thread_id)
 

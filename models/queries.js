@@ -126,14 +126,15 @@ const getThreadByCustomerId = async (customer_id) => {
 
 // ── Messages ───────────────────────────────────────────
 
-const createMessage = async (threadId, text, sender, operatorId = null, langDetected = null) => {
+const createMessage = async (threadId, text, sender, operatorId = null, langDetected = null, textTranslated = "") => {
     const result = await prisma.message.create({
         data: {
-            thread_id: threadId,
+            thread: { connect: { id: threadId } },
             text_original: text,
             sender,
-            operator_id: operatorId,
-            lang_detected: langDetected
+            lang_detected: langDetected,
+            text_translated: textTranslated,
+            ...(operatorId && { operator: { connect: { id: operatorId } } })
         }
     })
     console.log(`createMessage: successfully created message with ID ${result.id}`)
@@ -158,12 +159,19 @@ const getMessageById = async (id) => {
     })
 }
 
-// update last_message_at on thread after new message
 const updateThreadLastMessage = async (threadId) => {
     return prisma.thread.update({
         where: { id: threadId },
         data: { last_message_at: new Date() }
     })
+}
+
+const getLastCustomerLang = async (threadId) => {
+    const lastMsg = await prisma.message.findFirst({
+        where: { thread_id: threadId, sender: "CUSTOMER" },
+        orderBy: { created_at: "desc" }
+    })
+    return lastMsg?.lang_detected || null
 }
 
 // ── Snapshots ─────────────────────────────────────────
@@ -221,5 +229,6 @@ module.exports = {
     getCustomerByName,
     getThreadByCustomerId,
     getSnapshotByThreadId,
-    upsertSnapshot
+    upsertSnapshot,
+    getLastCustomerLang
 }
