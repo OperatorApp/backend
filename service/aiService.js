@@ -1,10 +1,11 @@
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+const query = require("../models/queries")
 
 const generateReply = async (systemPrompt, chatHistory) => {
     const messages = [
         { role: "system", content: systemPrompt },
         ...chatHistory,
-        { role: "user", content: "Generate your next reply as the customer. Reply with ONLY the chat message, nothing else." }
+        { role: "user", content: "Generate your next reply as the customer. Be realistic, sometimes make your statements ambiguous. Reply with ONLY the chat message, nothing else." }
     ]
 
     const response = await fetch(OPENAI_URL, {
@@ -18,7 +19,7 @@ const generateReply = async (systemPrompt, chatHistory) => {
             messages
         })
     })
-
+    console.log("OpenAI API response status:", response.status)
     if (!response.ok) {
         const error = await response.json()
         throw new Error(error.error?.message || "OpenAI API request failed")
@@ -56,5 +57,45 @@ const translateAndDetect = async (text, targetLang) => {
     return JSON.parse(clean)
 }
 
-module.exports = { generateReply,translateAndDetect }
+
+const askKnowledgeBase = async (operatorId, prompt) => {
+    const vectorInfo = await query.getOperatorVectorInfo(operatorId)
+
+    if (!vectorInfo?.vector_store_id) {
+        throw new Error("No knowledge base configured for this operator")
+    }
+
+    const res = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+            model: "gpt-4o-mini",
+            input: prompt,
+            tools: [{
+                type: "file_search",
+                vector_store_ids: [vectorInfo.vector_store_id]
+            }],
+            instructions: "You are a customer support assistant. Answer using ONLY the provided knowledge base. If the answer is not in the knowledge base, say so clearly. Be concise and factual. Do not make up product names, links, or information."
+        })
+    })
+
+    if (!res.ok) {
+        const err = await res.json()
+        throw new Error(`Knowledge query failed: ${err.error?.message}`)
+    }
+
+    const data = await res.json()
+    const text = data.output
+        .filter(item => item.type === "message")
+        .map(item => item.content.map(c => c.text).join(""))
+        .join("")
+
+    return text
+}
+
+
+module.exports = { generateReply,translateAndDetect, askKnowledgeBase }
 

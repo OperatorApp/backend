@@ -1,5 +1,6 @@
+const crypto = require("node:crypto")
 const { genPassword, validPassword } = require("../helper/authHelper")
-const { getUserFromUsername, createOperator, getOperatorByUsername } = require("../models/queries")
+const { getUserFromUsername, createOperator, getOperatorByUsername, addApiKeyToOperator} = require("../models/queries")
 const jwt = require("jsonwebtoken")
 
 const AUTH_ERROR = "Auth service experienced an error"
@@ -21,4 +22,15 @@ const signupSer = async (username, email, password, name, languages) => {
     return { id: operator.id, username: operator.username }
 }
 
-module.exports = { loginSer, signupSer }
+
+const createApiKeySer = async (operatorId) => {
+    const rawKey = `sk_live_${crypto.randomBytes(24).toString('hex')}`
+    const hashedKey = crypto.createHash('sha256').update(rawKey).digest('hex')
+
+    await addApiKeyToOperator(operatorId, hashedKey)
+
+    return rawKey
+}
+
+
+module.exports = { loginSer, signupSer,createApiKeySer }

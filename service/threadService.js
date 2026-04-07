@@ -1,8 +1,8 @@
 const query = require("../models/queries")
 
 
-async function getThreadsSer() {
-    const threads = await query.getAllThreads()
+async function getThreadsSer(operatorId = null) {
+    const threads = await query.getAllThreads(operatorId)
     if (!threads) throw new Error("No threads found")
     return threads
 }
@@ -20,10 +20,12 @@ async function getThreadByIdMessagesSer(id) {
     return result
 }
 
-async function postThreadSer(customerId, sessionId) {
+async function postThreadSer(customerId, sessionId, operatorApiKey = null) {
     let thread = await query.getThreadByCustomerId(customerId)
+    let operatorId = await query.getOperatorByApiKey(operatorApiKey)
+    console.log(`postThreadSer: operatorId for API key ${operatorApiKey} is ${operatorId}`)
     if (!thread) {
-        thread = await query.createThread(customerId, sessionId)
+        thread = await query.createThread(customerId, sessionId, operatorApiKey)
     }
     return thread
 }
@@ -38,14 +40,14 @@ async function patchThreadAssign(thread_id, operatorId) {
     return thread
 }
 
-async function getThreadByUsernameSer(username) {
+async function getThreadByUsernameSer(username, operatorId) {
     let customer = await query.getCustomerByName(username)
     if (!customer) {
         customer = await query.createCustomer("", username)
     }
     let thread = await query.getThreadByCustomerId(customer.id)
     if (!thread) {
-        thread = await query.createThread(customer.id, null)
+        thread = await query.createThread(customer.id, null, operatorId)
     }
 
     return thread

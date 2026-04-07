@@ -1,11 +1,14 @@
 const express = require('express')
 const threadController = require('../controllers/threadController')
+const { authenticateToken } = require('../middleware/authMiddleware')
+const { validateApiKey } = require('../middleware/apiKeyMiddleware')
+const { authenticateAny } = require('../middleware/authenticateAnyMiddleware')
 
 const router = express.Router()
 
-router.post('/', threadController.postThread)
-router.get('/', threadController.getThreads)
-router.get("/username/:username", threadController.getThreadByUsername)
+router.post('/',validateApiKey, threadController.postThread)
+router.get('/', authenticateToken, threadController.getThreads)
+router.get("/username/:username",authenticateAny, threadController.getThreadByUsername)
 
 router.get('/:id/messages', threadController.getThreadByIdMessages)
 router.get('/:id', threadController.getThreadById)

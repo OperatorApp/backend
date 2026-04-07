@@ -11,12 +11,12 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@prisma/client": "^5.22.0",
     "dotenv": "^17.3.1",
-    "prisma": "^7.5.0"
+    "prisma": "^5.22.0"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",
-    "@prisma/client": "^7.5.0",
     "apicache": "^1.6.3",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",

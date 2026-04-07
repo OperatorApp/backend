@@ -6,7 +6,8 @@ const ERROR_STATUS = 500
 const postThread = async (req, res) => {
     try {
         const { customerId, sessionId } = req.body
-        const thread = await threadService.postThreadSer(customerId, sessionId)
+        const operatorId = req.operator?.id || req.operatorId
+        const thread = await threadService.postThreadSer(customerId, sessionId, operatorId)
         res.json({ success: true, data: thread })
     } catch (err) {
         console.error(THREAD_ERROR, err)
@@ -38,7 +39,7 @@ const getThreadById = async (req, res) => {
 
 const getThreads = async (req, res) => {
     try {
-        const threads = await threadService.getThreadsSer()
+        const threads = await threadService.getThreadsSer(req.operatorId)
         console.log(threads)
         res.json({ success: true, data: threads })
     } catch (err) {
@@ -78,7 +79,8 @@ const patchStatus = async (req, res) => {
 
 const getThreadByUsername = async (req, res) => {
     try {
-        const thread = await threadService.getThreadByUsernameSer(req.params.username)
+        const operatorId = req.operator?.id || req.operatorId
+        const thread = await threadService.getThreadByUsernameSer(req.params.username, operatorId)
         res.json({ success: true, data: thread })
     } catch (err) {
         console.error(THREAD_ERROR, err)

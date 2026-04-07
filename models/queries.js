@@ -1,13 +1,17 @@
 const { PrismaClient } = require("@prisma/client")
-const { PrismaPg } = require("@prisma/adapter-pg")
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
-const prisma = new PrismaClient({ adapter })
+const prisma = new PrismaClient()
 // ── Operators ──────────────────────────────────────────
 
 const createOperator = async (username, email, password, name, languages) => {
     return prisma.operator.create({
-        data: { username, email, password, name, languages }
+        data: {
+            username,
+            email,
+            password,
+            name,
+            languages: languages.split(',').map(lang => lang.trim())
+        }
     })
 }
 
@@ -33,6 +37,27 @@ const getAllOperators = async () => {
     return prisma.operator.findMany({
         select: { id: true, username: true, name: true, email: true, languages: true }
     })
+}
+
+const addApiKeyToOperator = async (operatorId, apiKey) => {
+    return prisma.operator.update({
+        where: {id: operatorId},
+        data: {api_key: apiKey}
+    })
+}
+
+const getOperatorByApiKey = async (apiKey) => {
+    return prisma.operator.findUnique({
+        where: { api_key: apiKey }
+    })
+}
+
+const getOperatorsLanguages = async (operatorId) => {
+    const operator = await prisma.operator.findUnique({
+        where: { id: operatorId },
+        select: { languages: true }
+    })
+    return operator?.languages || []
 }
 
 // ── Customers ──────────────────────────────────────────
@@ -64,11 +89,12 @@ const getCustomerByName = async (name) =>{
 
 // ── Threads ────────────────────────────────────────────
 
-const createThread = async (customerId, sessionId) => {
+const createThread = async (customerId, sessionId, operatorId) => {
     return prisma.thread.create({
         data: {
             customer_id: customerId,
-            session_id: sessionId
+            session_id: sessionId,
+            assigned_to: operatorId
         }
     })
 }
@@ -87,8 +113,9 @@ const getThreadById = async (id) => {
     })
 }
 
-const getAllThreads = async () => {
+const getAllThreads = async (operatorId = null) => {
     return prisma.thread.findMany({
+        where: operatorId ? { assigned_to: operatorId } : {},
         include: {
             customer: true,
             assignedOperator: true,
@@ -207,6 +234,35 @@ const upsertSnapshot = async (threadId, snapshot) => {
     })
 }
 
+//Knowledge
+
+const upsertKnowledge = async (operatorId, content) => {
+    return prisma.knowledgeBase.upsert({
+        where: { operator_id: operatorId },
+        update: { content },
+        create: { operator_id: operatorId, content }
+    })
+}
+
+
+//Vectors
+const updateOperatorVectorStore = async (operatorId, vectorStoreId, vectorFileId) => {
+    return prisma.operator.update({
+        where: { id: operatorId },
+        data: {
+            vector_store_id: vectorStoreId,
+            vector_file_id: vectorFileId
+        }
+    })
+}
+
+const getOperatorVectorInfo = async (operatorId) => {
+    return prisma.operator.findUnique({
+        where: { id: operatorId },
+        select: { vector_store_id: true, vector_file_id: true }
+    })
+}
+
 module.exports = {
     prisma,
     createOperator,
@@ -230,5 +286,10 @@ module.exports = {
     getThreadByCustomerId,
     getSnapshotByThreadId,
     upsertSnapshot,
-    getLastCustomerLang
+    getLastCustomerLang,
+    addApiKeyToOperator,
+    upsertKnowledge,
+    updateOperatorVectorStore,
+    getOperatorVectorInfo,
+    getOperatorsLanguages
 }

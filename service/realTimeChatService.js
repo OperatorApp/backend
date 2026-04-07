@@ -19,7 +19,7 @@ const saveMessageSer = async (message) => {
 
     try {
         if (senderType === "CUSTOMER") {
-            const result = await translateAndDetect(text, getCurrentOperatorLanguage())
+            const result = await translateAndDetect(text, getCurrentOperatorLanguage(operator_id))
             translatedText = result.translation
             detectedLang = result.detected_lang
         } else if (senderType === "OPERATOR") {

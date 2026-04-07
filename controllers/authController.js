@@ -1,10 +1,11 @@
-const { loginSer, signupSer } = require("../service/authService")
+const { loginSer, signupSer,createApiKeySer } = require("../service/authService")
 
 const AUTH_ERROR = "Auth service experienced an error"
 
 const login = async (req, res) => {
     try {
         const { username, password } = req.body
+        console.log("Login attempt:", username)
         const data = await loginSer(username, password)
         res.json({ success: true, data })
     } catch (err) {
@@ -28,4 +29,17 @@ const logout = (req, res) => {
     res.json({ success: true, data: {} })
 }
 
-module.exports = { login, signup, logout }
+
+const createApiKey = async (req, res) => {
+    try {
+        const operatorId = req.operatorId
+        const apiKey = await createApiKeySer(operatorId)
+
+        res.json({success: true, data: {apiKey}})
+    } catch (err) {
+        console.error(AUTH_ERROR, err)
+        res.status(500).json({success: false, error: "Failed to create API key"})
+    }
+}
+
+module.exports = { login, signup, logout, createApiKey }
