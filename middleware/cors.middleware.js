@@ -4,7 +4,9 @@ const { prisma } = require('../models/queries');
 
 const dynamicCors = async (req, res, next) => {
     const origin = req.headers['origin'];
-    const internalOrigins = [process.env.INTERNAL_FRONTEND_URL];
+    const internalOrigins = process.env.INTERNAL_FRONTEND_URL
+        ? [process.env.INTERNAL_FRONTEND_URL]
+        : [];
 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, Authorization');
