@@ -263,6 +263,60 @@ const getOperatorVectorInfo = async (operatorId) => {
     })
 }
 
+//Buttons
+
+const postButton = async (operatorId, name, prompt) => {
+    return prisma.promptButtons.create({
+        data: {
+            operator_id: operatorId,
+            name,
+            prompt
+        }
+    })
+}
+
+const getButtonsByOperatorId = async (operatorId) => {
+    return prisma.promptButtons.findMany({
+        where: { operator_id: operatorId }
+    })
+}
+
+const upsertPromptButton = async (operatorId, name, prompt) => {
+    const existing = await prisma.promptButtons.findFirst({
+        where: {operator_id: operatorId, name}
+    })
+
+    if (existing) {
+        return prisma.promptButtons.update({
+            where: {id: existing.id},
+            data: {prompt}
+        })
+    } else {
+        return prisma.promptButtons.create({
+            data: {
+                operator_id: operatorId,
+                name,
+                prompt
+            }
+        })
+    }
+}
+
+const deletePromptButton = async (operatorId, buttonId) => {
+    return prisma.promptButtons.deleteMany({
+        where: {
+            id: buttonId,
+            operator_id: operatorId
+        }
+    })
+}
+
+const getPromptButtonById = async (operatorId, buttonId) => {
+    return prisma.promptButtons.findFirst({
+        where: { id: buttonId, operator_id: operatorId }
+    })
+}
+
 module.exports = {
     prisma,
     createOperator,
@@ -291,5 +345,11 @@ module.exports = {
     upsertKnowledge,
     updateOperatorVectorStore,
     getOperatorVectorInfo,
-    getOperatorsLanguages
+    getOperatorsLanguages,
+    postButton,
+    getButtonsByOperatorId,
+    upsertPromptButton,
+    deletePromptButton,
+    getOperatorByApiKey,
+    getPromptButtonById
 }

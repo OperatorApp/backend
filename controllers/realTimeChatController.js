@@ -6,8 +6,8 @@ const saveMessage = async (socket, io, data) => {
     try {
         console.log("incoming message:", data)
         await threadService.patchThreadStatus(data.thread_id, "PENDING")
+        data.operator_id = socket.operatorId
         const saved = await saveMessageSer(data)
-        console.log("saved message", data)
         io.to(`thread_${data.thread_id}`).emit("message", {
             success: true,
             event: "new_message",

@@ -16,6 +16,7 @@ const validateApiKey = async (req, res, next) => {
     if (!operator) return res.status(401).json({ error: "Invalid API key" })
 
     req.operator = operator
+    req.operatorId = operator.id
     next()
 }
 

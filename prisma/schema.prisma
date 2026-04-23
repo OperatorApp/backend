@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -187,4 +186,13 @@ model KnowledgeBase {
   operator    Operator @relation(fields: [operator_id], references: [id])
 
   @@map("knowledge_base")
+}
+
+model PromptButtons {
+  id          Int    @id @default(autoincrement())
+  operator_id Int
+  name        String
+  prompt      String
+
+  @@unique([operator_id, name])
 }

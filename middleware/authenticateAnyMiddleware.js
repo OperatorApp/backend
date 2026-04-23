@@ -13,6 +13,7 @@ const authenticateAny = async (req, res, next) => {
         if (operator) {
             req.operator = operator
             req.authType = 'api_key'
+            req.operatorId = operator.id
             return next()
         }
     }
@@ -27,6 +28,7 @@ const authenticateAny = async (req, res, next) => {
             })
             if (operator) {
                 req.operator = operator
+                req.operatorId = operator.id
                 req.authType = 'token'
                 return next()
             }

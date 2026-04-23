@@ -1,0 +1,44 @@
+// cors.middleware.js
+const crypto = require('node:crypto')
+const { prisma } = require('../models/queries');
+
+const internalOrigins = [process.env.INTERNAL_FRONTEND_URL];
+
+const dynamicCors = async (req, res, next) => {
+    const origin = req.headers['origin'];
+    const internalOrigins = ["http://localhost:5174", "http://localhost:5173"];
+
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    if (!origin || internalOrigins.includes(origin)) {
+        if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
+        if (req.method === 'OPTIONS') return res.sendStatus(204);
+        return next();
+    }
+
+    res.setHeader('Access-Control-Allow-Origin', origin);
+
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+
+    const key = req.headers['x-api-key'];
+    if (!key) return res.status(401).json({ error: 'API key required' });
+
+    const hashed = crypto.createHash('sha256').update(key).digest('hex');
+    const operator = await prisma.operator.findFirst({
+        where: { api_key: hashed }
+    });
+
+    if (!operator) return res.status(401).json({ error: 'Invalid API key' });
+
+    if (operator.allowed_origins && !operator.allowed_origins.includes(origin)) {
+        return res.status(403).json({ error: 'Origin not allowed' });
+    }
+
+    req.operator = operator;
+    req.operatorId = operator.id;
+    next();
+};
+
+module.exports = { dynamicCors };
