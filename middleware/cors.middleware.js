@@ -30,10 +30,6 @@ const dynamicCors = async (req, res, next) => {
 
     if (!operator) return res.status(401).json({ error: 'Invalid API key' });
 
-    if (operator.allowed_origins && !operator.allowed_origins.includes(origin)) {
-        return res.status(403).json({ error: 'Origin not allowed' });
-    }
-
     req.operator = operator;
     req.operatorId = operator.id;
     next();
