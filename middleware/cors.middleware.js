@@ -12,18 +12,15 @@ const dynamicCors = async (req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-    // Internal frontend — pass through without API key
     if (!origin || internalOrigins.includes(origin)) {
         if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
         if (req.method === 'OPTIONS') return res.sendStatus(204);
         return next();
     }
 
-    // External origin — set origin header first (so browser can read errors)
     res.setHeader('Access-Control-Allow-Origin', origin);
     if (req.method === 'OPTIONS') return res.sendStatus(204);
 
-    // Then validate API key
     const key = req.headers['x-api-key'];
     if (!key) return res.status(401).json({ error: 'API key required' });
 

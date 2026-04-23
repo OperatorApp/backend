@@ -18,11 +18,6 @@ const socket_ = (io) => {
 
             if (!operator) return next(new Error("Invalid API key"));
 
-            if (origin && !internalOrigins.includes(origin)) {
-                if (!operator.allowed_origins.includes(origin)) {
-                    return next(new Error("Origin not allowed"));
-                }
-            }
 
             socket.operatorId = operator.id;
             socket.authType = 'api_key';
