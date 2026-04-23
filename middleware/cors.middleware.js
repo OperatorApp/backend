@@ -2,11 +2,9 @@
 const crypto = require('node:crypto')
 const { prisma } = require('../models/queries');
 
-const internalOrigins = [process.env.INTERNAL_FRONTEND_URL];
-
 const dynamicCors = async (req, res, next) => {
     const origin = req.headers['origin'];
-    const internalOrigins = ["http://localhost:5174", "http://localhost:5173"];
+    const internalOrigins = [process.env.INTERNAL_FRONTEND_URL];
 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, Authorization');
