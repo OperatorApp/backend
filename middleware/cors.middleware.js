@@ -8,7 +8,7 @@ const dynamicCors = async (req, res, next) => {
         ? [process.env.INTERNAL_FRONTEND_URL]
         : [];
 
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, Authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
 
