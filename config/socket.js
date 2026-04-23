@@ -6,8 +6,6 @@ const { prisma } = require('../models/queries');
 
 const socket_ = (io) => {
     io.use(async (socket, next) => {
-        const origin = socket.handshake.headers?.origin;
-        const internalOrigins = [process.env.INTERNAL_FRONTEND_URL];
 
         const apiKey = socket.handshake.auth?.apiKey;
         if (apiKey) {

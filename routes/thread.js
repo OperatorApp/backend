@@ -13,7 +13,7 @@ router.get("/username/:username",authenticateAny, threadController.getThreadByUs
 router.get('/:id/messages', threadController.getThreadByIdMessages)
 router.get('/:id', threadController.getThreadById)
 
-router.patch("/:id/status", threadController.patchStatus)
+router.patch("/:id/status",authenticateToken, threadController.patchStatus)
 router.patch("/:id/assign", threadController.patchAssign)
 
 
