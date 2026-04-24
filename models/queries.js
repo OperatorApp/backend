@@ -114,9 +114,21 @@ const getThreadById = async (id) => {
     })
 }
 
-const getAllThreads = async (operatorId = null) => {
+const getAllThreads = async (operatorId = null, filters = {}) => {
+    const { hasMessages, name, pendingOnly } = filters
+
     return prisma.thread.findMany({
-        where: operatorId ? { assigned_to: operatorId } : {},
+        where: {
+            ...(operatorId ? { assigned_to: operatorId } : {}),
+            ...(hasMessages === true && { messages: { some: {} } }),
+            ...(hasMessages === false && { messages: { none: {} } }),
+            ...(pendingOnly && { status: "PENDING" }),
+            ...(name && {
+                customer: {
+                    name: { equals: name, mode: "insensitive" }
+                }
+            })
+        },
         include: {
             customer: true,
             assignedOperator: true,

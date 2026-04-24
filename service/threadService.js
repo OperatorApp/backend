@@ -1,8 +1,8 @@
 const query = require("../models/queries")
 
 
-async function getThreadsSer(operatorId = null) {
-    const threads = await query.getAllThreads(operatorId)
+async function getThreadsSer(operatorId = null, filter = {}) {
+    const threads = await query.getAllThreads(operatorId, filter)
     if (!threads) throw new Error("No threads found")
     return threads
 }

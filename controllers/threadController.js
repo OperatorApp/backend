@@ -39,8 +39,13 @@ const getThreadById = async (req, res) => {
 
 const getThreads = async (req, res) => {
     try {
-        const threads = await threadService.getThreadsSer(req.operatorId)
-        console.log(threads)
+        const { name, hasMessages, pendingOnly } = req.query
+        const filter = {
+            ...(name && { name }),
+            ...(pendingOnly === "true" && { pendingOnly: true }),
+            ...(hasMessages !== undefined && { hasMessages: hasMessages === "true" })
+        }
+        const threads = await threadService.getThreadsSer(req.operatorId, filter)
         res.json({ success: true, data: threads })
     } catch (err) {
         console.error(THREAD_ERROR, err)
