@@ -94,7 +94,8 @@ const createThread = async (customerId, sessionId, operatorId) => {
         data: {
             customer_id: customerId,
             session_id: sessionId,
-            assigned_to: operatorId
+            assigned_to: operatorId,
+            last_message_at: new Date()
         }
     })
 }
