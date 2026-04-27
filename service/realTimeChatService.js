@@ -19,7 +19,8 @@ const saveMessageSer = async (message) => {
 
     try {
         if (senderType === "CUSTOMER") {
-            const result = await translateAndDetect(text, getCurrentOperatorLanguage(operator_id))
+            console.log("saving message from customer, translating to operator language ", await getCurrentOperatorLanguage(operator_id))
+            const result = await translateAndDetect(text, await getCurrentOperatorLanguage(operator_id))
             translatedText = result.translation
             detectedLang = result.detected_lang
         } else if (senderType === "OPERATOR") {
