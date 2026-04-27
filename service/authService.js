@@ -2,6 +2,7 @@ const crypto = require("node:crypto")
 const { genPassword, validPassword } = require("../helper/authHelper")
 const { getUserFromUsername, createOperator, getOperatorByUsername, addApiKeyToOperator} = require("../models/queries")
 const jwt = require("jsonwebtoken")
+const query = require("../models/queries")
 
 const AUTH_ERROR = "Auth service experienced an error"
 

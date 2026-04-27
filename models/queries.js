@@ -60,6 +60,13 @@ const getOperatorsLanguages = async (operatorId) => {
     return operator?.languages || []
 }
 
+const updateOperatorLanguage = async (operatorId, languages) => {
+    return prisma.operator.update({
+        where: { id: operatorId },
+        data: { languages }
+    })
+}
+
 // ── Customers ──────────────────────────────────────────
 
 const createCustomer = async (email, name) => {
@@ -364,5 +371,6 @@ module.exports = {
     upsertPromptButton,
     deletePromptButton,
     getOperatorByApiKey,
-    getPromptButtonById
+    getPromptButtonById,
+    updateOperatorLanguage,
 }

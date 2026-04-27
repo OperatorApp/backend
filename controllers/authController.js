@@ -1,4 +1,4 @@
-const { loginSer, signupSer,createApiKeySer } = require("../service/authService")
+const { loginSer, signupSer,createApiKeySer, updateLanguageSer } = require("../service/authService")
 
 const AUTH_ERROR = "Auth service experienced an error"
 
@@ -41,5 +41,6 @@ const createApiKey = async (req, res) => {
         res.status(500).json({success: false, error: "Failed to create API key"})
     }
 }
+
 
 module.exports = { login, signup, logout, createApiKey }

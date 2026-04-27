@@ -6,9 +6,11 @@ const cors = require("cors")
 const authRoutes = require("./routes/auth")
 const threadRoutes = require("./routes/thread")
 const aiRoutes = require("./routes/ai")
+const operatorRoutes = require("./routes/operator")
 const app = express()
 const server = createServer(app)
 const { dynamicCors } = require('./middleware/cors.middleware');
+
 
 const io = new Server(server, {
     cors: {
@@ -35,6 +37,7 @@ app.use(express.json({ limit: '100mb' }))
 app.use("/auth", authRoutes)
 app.use("/thread", threadRoutes)
 app.use("/ai", aiRoutes)
+app.use("/operator", operatorRoutes)
 
 require("./config/socket")(io)
 

@@ -11,7 +11,5 @@ router.post('/logout', authController.logout)
 
 router.post('/create-api-key', authenticateToken, authController.createApiKey)
 
-
-
 module.exports = router;
 
