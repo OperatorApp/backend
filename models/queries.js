@@ -230,30 +230,24 @@ const getSnapshotByThreadId = async (threadId) => {
 }
 
 const upsertSnapshot = async (threadId, snapshot) => {
+    const fields = {
+        customer: snapshot.customer ?? null,
+        country: snapshot.country,
+        city: snapshot.city,
+        local_time: snapshot.local_time,
+        url_trail: snapshot.url_trail,
+        cart_snapshot: snapshot.cart_snapshot,
+        orders: snapshot.orders ?? null,
+        sentiment_label: snapshot.sentiment_label,
+        sentiment_conf: snapshot.sentiment_conf,
+    }
+
     return prisma.sessionContextSnapshot.upsert({
         where: { thread_id: threadId },
-        update: {
-            country: snapshot.country,
-            city: snapshot.city,
-            local_time: snapshot.local_time,
-            url_trail: snapshot.url_trail,
-            cart_snapshot: snapshot.cart_snapshot,
-            sentiment_label: snapshot.sentiment_label,
-            sentiment_conf: snapshot.sentiment_conf
-        },
-        create: {
-            thread_id: threadId,
-            country: snapshot.country,
-            city: snapshot.city,
-            local_time: snapshot.local_time,
-            url_trail: snapshot.url_trail,
-            cart_snapshot: snapshot.cart_snapshot,
-            sentiment_label: snapshot.sentiment_label,
-            sentiment_conf: snapshot.sentiment_conf
-        }
+        update: fields,
+        create: { thread_id: threadId, ...fields },
     })
 }
-
 //Knowledge
 
 const upsertKnowledge = async (operatorId, content) => {
@@ -337,6 +331,29 @@ const getPromptButtonById = async (operatorId, buttonId) => {
     })
 }
 
+
+async function getThreadPaintState(thread_id) {
+    return prisma.threadPaintState.findUnique({ where: { thread_id } })
+}
+
+async function createThreadPaintState(thread_id, data) {
+    return prisma.threadPaintState.create({
+        data: { thread_id, ...data },
+    })
+}
+
+async function updateThreadPaintState(thread_id, data) {
+    return prisma.threadPaintState.update({
+        where: { thread_id },
+        data,
+    })
+}
+
+async function getSnapshot(thread_id) {
+    return prisma.sessionContextSnapshot.findUnique({ where: { thread_id } })
+}
+
+
 module.exports = {
     prisma,
     createOperator,
@@ -373,4 +390,8 @@ module.exports = {
     getOperatorByApiKey,
     getPromptButtonById,
     updateOperatorLanguage,
+    getThreadPaintState,
+    createThreadPaintState,
+    updateThreadPaintState,
+    getSnapshot,
 }

@@ -7,7 +7,7 @@ const {authenticateToken} = require("../middleware/authMiddleware");
 const router = express.Router()
 
 router.post('/customerSimulation', validateApiKey, aiController.customerSimulation)
-router.post("/knowledge", validateApiKey, aiController.upsertKnowledge)
+router.post("/knowledge", authenticateAny, aiController.upsertKnowledge)
 router.post('/knowledge/query', authenticateAny, aiController.queryKnowledge)
 router.post('/prompt-button', authenticateToken, aiController.createPromptButton)
 router.get('/prompt-button', authenticateToken, aiController.getPromptButtons)

@@ -53,6 +53,25 @@ async function getThreadByUsernameSer(username, operatorId) {
     return thread
 }
 
+
+async function getThreadPaintStateSer(threadId) {
+    const state = await query.getThreadPaintState(threadId)
+
+    if (!state) {
+        return { scores: {}, base_color: null }
+    }
+
+    return {
+        scores: state.context_scores ?? {},
+        base_color: {
+            h: state.base_color_h,
+            s: state.base_color_s,
+            v: state.base_color_v,
+        },
+    }
+}
+
+
 module.exports={
     getThreadsSer,
     getThreadByIdSer,
@@ -60,5 +79,6 @@ module.exports={
     postThreadSer,
     patchThreadAssign,
     patchThreadStatus,
-    getThreadByUsernameSer
+    getThreadByUsernameSer,
+    getThreadPaintStateSer
 }

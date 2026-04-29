@@ -16,6 +16,8 @@ router.get('/:id', threadController.getThreadById)
 router.patch("/:id/status",authenticateToken, threadController.patchStatus)
 router.patch("/:id/assign", threadController.patchAssign)
 
+router.get("/:id/paint", threadController.getThreadPaintState)
+
 
 module.exports = router;
 

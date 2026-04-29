@@ -93,6 +93,16 @@ const getThreadByUsername = async (req, res) => {
     }
 }
 
+const getThreadPaintState = async (req, res) => {
+    try {
+        const paintState = await threadService.getThreadPaintStateSer(Number(req.params.id))
+        res.json({ success: true, data: paintState })
+    } catch (err) {
+        console.error(THREAD_ERROR, err)
+        res.status(ERROR_STATUS).json({ success: false, error: err.message })
+    }
+}
+
 module.exports = {
     postThread,
     getThreadByIdMessages,
@@ -100,5 +110,6 @@ module.exports = {
     getThreads,
     patchAssign,
     patchStatus,
-    getThreadByUsername
+    getThreadByUsername,
+    getThreadPaintState
 }

@@ -89,6 +89,7 @@ model Message {
 model ThreadPaintState {
   thread_id                 Int      @id
   context_scores            Json
+  scoring_version           Int      @default(1)
   last_processed_message_id Int?
   updated_at                DateTime @updatedAt
   base_color_h              Float
@@ -99,11 +100,13 @@ model ThreadPaintState {
 
 model SessionContextSnapshot {
   id              Int       @id @default(autoincrement())
+  customer        Json?
   country         String?
   city            String?
   local_time      DateTime?
   url_trail       Json?
   cart_snapshot   Json?
+  orders          Json?
   sentiment_label String?
   sentiment_conf  Float?
   updated_at      DateTime  @updatedAt

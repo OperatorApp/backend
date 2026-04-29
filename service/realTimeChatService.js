@@ -50,14 +50,17 @@ const saveMessageSer = async (message) => {
 
     return { ...saved, thread_id, snapshot, snapshotChanged }
 }
+
 const saveSnapshotSer = async (thread_id, snapshot) => {
     const existing = await query.getSnapshotByThreadId(thread_id)
 
     const hasChanges = !existing ||
         existing.country !== snapshot.country ||
         existing.city !== snapshot.city ||
+        JSON.stringify(existing.customer) !== JSON.stringify(snapshot.customer) ||
         JSON.stringify(existing.url_trail) !== JSON.stringify(snapshot.url_trail) ||
         JSON.stringify(existing.cart_snapshot) !== JSON.stringify(snapshot.cart_snapshot) ||
+        JSON.stringify(existing.orders) !== JSON.stringify(snapshot.orders) ||
         existing.sentiment_label !== snapshot.sentiment_label ||
         existing.sentiment_conf !== snapshot.sentiment_conf
 
