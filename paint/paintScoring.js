@@ -11,7 +11,7 @@ function normalizeText(text) {
 
 function tokenizeMessage(text) {
     return normalizeText(text)
-        .split(/[^a-z0-9]+/)
+        .split(/[^\p{L}\p{N}]+/u)
         .filter(Boolean)
 }
 
@@ -68,6 +68,12 @@ function computeKeywordBoost(tokens, keywords) {
     return boost
 }
 
+
+function computeKeywordBoostForLang(section, tokens, language) {
+    const keywords = section.keywords?.[language] ?? section.keywords?.en ?? []
+    return computeKeywordBoost(tokens, keywords)
+}
+
 function computeEntityBoost(normalizedMessage, entities) {
     if (!entities?.length) return 0
     let boost = 0
@@ -120,11 +126,12 @@ function clampScore(score) {
     return score
 }
 
-function computeNewScores({ prevScores, messageText, snapshot, senderType, language }) {
+function computeNewScores({ prevScores, messageText, messageTextTranslated, snapshot, senderType, language }) {
     console.log("[scoring] called with:", {
         senderType,
         language,
         messageText,
+        messageTextTranslated,
         hasSnapshot: !!snapshot,
         prevScores,
     })
@@ -133,25 +140,44 @@ function computeNewScores({ prevScores, messageText, snapshot, senderType, langu
     const decayed = decayAllScores(prevScores ?? {}, catalog)
     const senderWeight = getSenderWeight(senderType)
 
-    console.log("[scoring] senderWeight:", senderWeight)
-
     if (senderWeight === 0 || !messageText) {
         console.log("[scoring] early return — no boost will be applied")
         return decayed
     }
 
-    const normalizedMessage = normalizeText(messageText)
-    const tokens = tokenizeMessage(messageText)
+    // Original message — used for entity matching AND keyword matching in detected language
+    const normalizedOriginal = normalizeText(messageText)
+    const tokensOriginal = tokenizeMessage(messageText)
 
-    console.log("[scoring] tokens:", tokens)
+    // Translated message — used for keyword matching in English as a fallback
+    const hasTranslation =
+        messageTextTranslated && messageTextTranslated !== messageText
+    const tokensTranslated = hasTranslation ? tokenizeMessage(messageTextTranslated) : null
+
+    console.log("[scoring] tokens (original):", tokensOriginal)
+    if (tokensTranslated) console.log("[scoring] tokens (translated):", tokensTranslated)
 
     const newScores = {}
 
     for (const section of catalog) {
-        const boost = computeSectionBoost(section, normalizedMessage, tokens, snapshot, language)
+        const entities = extractSectionEntities(snapshot, section.entity_paths)
+        const entityBoost = computeEntityBoost(normalizedOriginal, entities)
+        const kwOriginal = computeKeywordBoostForLang(section, tokensOriginal, language)
+        const kwTranslated = tokensTranslated
+            ? computeKeywordBoostForLang(section, tokensTranslated, "en")
+            : 0
+        const keywordBoost = Math.max(kwOriginal, kwTranslated)
+
+        const rawBoost = keywordBoost + entityBoost
+        const boost = Math.min(SCORING_CONFIG.PER_MESSAGE_BOOST_CAP, rawBoost)
+
         if (boost > 0) {
-            console.log(`[scoring] ${section.id} boost:`, boost)
+            console.log(
+                `[scoring] ${section.id} boost:`, boost,
+                `(kw_orig=${kwOriginal}, kw_trans=${kwTranslated}, entity=${entityBoost})`
+            )
         }
+
         const weightedBoost = boost * senderWeight
         newScores[section.id] = clampScore(decayed[section.id] + weightedBoost)
     }

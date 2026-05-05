@@ -1,4 +1,3 @@
-// service/paintService.js
 const paintQueries = require("../models/queries")
 const { computeNewScores } = require("../paint/paintScoring")
 const { SCORING_CONFIG } = require("../paint/paintCatalog")
@@ -48,9 +47,14 @@ async function updateThreadPaintState(thread_id, message) {
 
     const snapshot = await paintQueries.getSnapshot(thread_id)
 
+    if (!message.detected_lang){
+        console.warn(`Message ${message.id} is missing detected language, defaulting to "en"`)
+    }
+
     const newScores = computeNewScores({
         prevScores: state.context_scores ?? {},
         messageText: message.text,
+        messageTextTranslated: message.text_translated,
         snapshot,
         senderType: message.sender,
         language: message.detected_lang ?? "en",

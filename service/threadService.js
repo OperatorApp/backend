@@ -9,6 +9,11 @@ async function getThreadsSer(operatorId = null, filter = {}) {
 
 async function getThreadByIdSer(id) {
     const thread = await query.getThreadById(id)
+    if (thread.snapshot?.url_trail?.length) {
+        thread.snapshot.url_trail = thread.snapshot.url_trail
+            .slice(-10)
+            .reverse()
+    }
     if (!thread) throw new Error("Thread not found")
     return thread
 }
