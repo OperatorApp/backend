@@ -60,6 +60,7 @@ const translateAndDetect = async (text, targetLang) => {
 
 const askKnowledgeBase = async (operatorId, prompt) => {
     const vectorInfo = await query.getOperatorVectorInfo(operatorId)
+    const operatorLang = await query.getOperatorLanguage(operatorId)
 
     if (!vectorInfo?.vector_store_id) {
         throw new Error("No knowledge base configured for this operator")
@@ -78,7 +79,7 @@ const askKnowledgeBase = async (operatorId, prompt) => {
                 type: "file_search",
                 vector_store_ids: [vectorInfo.vector_store_id]
             }],
-            instructions: "You are a customer support assistant. Answer using ONLY the provided knowledge base. If the answer is not in the knowledge base, say so clearly. Be concise and factual. Do not make up product names, links, or information."
+            instructions: `You are a customer support assistant. Answer using ONLY the provided knowledge base. If the answer is not in the knowledge base, say so clearly. Be concise and factual. Do not make up product names, links, or information respond in ${operatorLang}.`
         })
     })
 
