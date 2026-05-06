@@ -1,5 +1,6 @@
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 const query = require("../models/queries")
+const {getLanguagesSer} = require("./operatorService")
 
 const generateReply = async (systemPrompt, chatHistory) => {
     const messages = [
@@ -60,7 +61,7 @@ const translateAndDetect = async (text, targetLang) => {
 
 const askKnowledgeBase = async (operatorId, prompt) => {
     const vectorInfo = await query.getOperatorVectorInfo(operatorId)
-    const operatorLang = await query.getOperatorLanguage(operatorId)
+    const operatorLang = await getLanguagesSer(operatorId)
 
     if (!vectorInfo?.vector_store_id) {
         throw new Error("No knowledge base configured for this operator")
