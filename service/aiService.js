@@ -80,7 +80,7 @@ const askKnowledgeBase = async (operatorId, prompt) => {
                 type: "file_search",
                 vector_store_ids: [vectorInfo.vector_store_id]
             }],
-            instructions: `You are a customer support assistant. Answer using ONLY the provided knowledge base. If the answer is not in the knowledge base, say so clearly. Be concise and factual. Do not make up product names, links, or information respond in ${operatorLang}.`
+            instructions: `You are a customer support assistant. Answer using ONLY the provided knowledge base. If the answer is not in the knowledge base, say so clearly. Be concise and factual. Do not make up product names, links, or information respond in ${operatorLang}, respond ONLY with the reply.`
         })
     })
 
