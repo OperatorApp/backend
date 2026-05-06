@@ -51,7 +51,7 @@ async function updateThreadPaintState(thread_id, message) {
         console.warn(`Message ${message.id} is missing detected language, defaulting to "en"`)
     }
 
-    const newScores = computeNewScores({
+    const newScores = await computeNewScores({
         prevScores: state.context_scores ?? {},
         messageText: message.text,
         messageTextTranslated: message.text_translated,
@@ -65,6 +65,8 @@ async function updateThreadPaintState(thread_id, message) {
         last_processed_message_id: message.id,
     })
 }
+
+
 
 async function getThreadPaintStateSer(threadId) {
     const state = await paintQueries.getThreadPaintState(threadId)

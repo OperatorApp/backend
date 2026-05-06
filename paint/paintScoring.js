@@ -1,5 +1,6 @@
 
 const { SECTION_CATALOG, SCORING_CONFIG } = require("./paintCatalog")
+const {scoreSectionsSemantically} = require("../service/aiService");
 
 function normalizeText(text) {
     if (!text) return ""
@@ -126,36 +127,33 @@ function clampScore(score) {
     return score
 }
 
-function computeNewScores({ prevScores, messageText, messageTextTranslated, snapshot, senderType, language }) {
-    console.log("[scoring] called with:", {
-        senderType,
-        language,
-        messageText,
-        messageTextTranslated,
-        hasSnapshot: !!snapshot,
-        prevScores,
-    })
-
+async function computeNewScores({ prevScores, messageText, messageTextTranslated, snapshot, senderType, language }) {
     const catalog = SECTION_CATALOG
     const decayed = decayAllScores(prevScores ?? {}, catalog)
     const senderWeight = getSenderWeight(senderType)
 
-    if (senderWeight === 0 || !messageText) {
-        console.log("[scoring] early return — no boost will be applied")
-        return decayed
-    }
+    if (senderWeight === 0 || !messageText) return decayed
 
-    // Original message — used for entity matching AND keyword matching in detected language
     const normalizedOriginal = normalizeText(messageText)
     const tokensOriginal = tokenizeMessage(messageText)
-
-    // Translated message — used for keyword matching in English as a fallback
-    const hasTranslation =
-        messageTextTranslated && messageTextTranslated !== messageText
+    const hasTranslation = messageTextTranslated && messageTextTranslated !== messageText
     const tokensTranslated = hasTranslation ? tokenizeMessage(messageTextTranslated) : null
 
-    console.log("[scoring] tokens (original):", tokensOriginal)
-    if (tokensTranslated) console.log("[scoring] tokens (translated):", tokensTranslated)
+    let aiScores = {}
+    const eligibleForAi =
+        SCORING_CONFIG.AI_ENABLED &&
+        senderType === "CUSTOMER" &&
+        messageText.length >= SCORING_CONFIG.AI_MIN_MESSAGE_LENGTH
+
+    if (eligibleForAi) {
+        try {
+            const textForAi = messageTextTranslated || messageText
+            aiScores = await scoreSectionsSemantically(textForAi, catalog, snapshot)
+            console.log("[scoring] ai scores:", aiScores)
+        } catch (err) {
+            console.warn("[scoring] AI scoring failed, using heuristics only:", err.message)
+        }
+    }
 
     const newScores = {}
 
@@ -167,22 +165,27 @@ function computeNewScores({ prevScores, messageText, messageTextTranslated, snap
             ? computeKeywordBoostForLang(section, tokensTranslated, "en")
             : 0
         const keywordBoost = Math.max(kwOriginal, kwTranslated)
+        const heuristicBoost = Math.min(
+            SCORING_CONFIG.PER_MESSAGE_BOOST_CAP,
+            keywordBoost + entityBoost
+        )
 
-        const rawBoost = keywordBoost + entityBoost
-        const boost = Math.min(SCORING_CONFIG.PER_MESSAGE_BOOST_CAP, rawBoost)
+        const aiRaw = Math.max(0, Math.min(1, aiScores[section.id] ?? 0))
+        const aiBoost = aiRaw * SCORING_CONFIG.AI_WEIGHT
 
-        if (boost > 0) {
-            console.log(
-                `[scoring] ${section.id} boost:`, boost,
-                `(kw_orig=${kwOriginal}, kw_trans=${kwTranslated}, entity=${entityBoost})`
-            )
+        const combinedBoost = Math.min(
+            SCORING_CONFIG.AI_TOTAL_BOOST_CAP,
+            heuristicBoost + aiBoost
+        )
+
+        if (combinedBoost > 0) {
+            console.log(`[scoring] ${section.id}: heuristic=${heuristicBoost.toFixed(2)} ai=${aiBoost.toFixed(2)} → ${combinedBoost.toFixed(2)}`)
         }
 
-        const weightedBoost = boost * senderWeight
+        const weightedBoost = combinedBoost * senderWeight
         newScores[section.id] = clampScore(decayed[section.id] + weightedBoost)
     }
 
-    console.log("[scoring] final scores:", newScores)
     return newScores
 }
 

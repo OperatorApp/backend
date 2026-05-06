@@ -176,6 +176,67 @@ const askPromptButton = async (operatorId, buttonId, threadId) => {
 }
 
 
+const scoreSectionsSemantically = async (messageText, catalog, snapshot) => {
+    const sections = catalog.map(s => ({ id: s.id, description: s.description }))
+
+    const hint = summarizeSnapshotForAi(snapshot)
+
+    const systemPrompt = `You score how relevant a customer's chat message is to different context sections about them. For each section, output a relevance score from 0.0 to 1.0:
+- 0.0 = irrelevant
+- 0.3 = vaguely related
+- 0.6 = clearly related
+- 1.0 = directly about this section
+Be strict. Most messages are about 1-2 sections, not all of them. Respond with JSON only.`
+
+    const userPrompt = `Sections:
+${sections.map(s => `- ${s.id}: ${s.description}`).join("\n")}
+
+Customer context (for grounding, not for scoring):
+${hint}
+
+Message: ${JSON.stringify(messageText)}
+
+Respond with: {"scores": {"customer": 0.0, "session": 0.0, "url_trail": 0.0, "cart": 0.0, "orders": 0.0, "sentiment": 0.0}}`
+
+    const response = await fetch(OPENAI_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+            model: "gpt-4o-mini",
+            temperature: 0.1,
+            response_format: { type: "json_object" },
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userPrompt },
+            ],
+        }),
+    })
+
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.error?.message || "AI scoring request failed")
+    }
+
+    const data = await response.json()
+    const parsed = JSON.parse(data.choices[0].message.content)
+    return parsed.scores ?? {}
+}
+
+function summarizeSnapshotForAi(snapshot) {
+    if (!snapshot) return "(no context available)"
+    const parts = []
+    if (snapshot.customer?.name)              parts.push(`name=${snapshot.customer.name}`)
+    if (snapshot.country || snapshot.city)    parts.push(`location=${[snapshot.city, snapshot.country].filter(Boolean).join(", ")}`)
+    if (snapshot.cart_snapshot?.items?.length) parts.push(`cart_items=${snapshot.cart_snapshot.items.length}`)
+    if (snapshot.orders?.length)              parts.push(`past_orders=${snapshot.orders.length}`)
+    if (snapshot.url_trail?.length)           parts.push(`pages_browsed=${snapshot.url_trail.length}`)
+    return parts.length ? parts.join("; ") : "(empty snapshot)"
+}
+
+
 module.exports = {
     generateReply,
     translateAndDetect,
@@ -184,6 +245,7 @@ module.exports = {
     getPromptButtonsSer,
     upsertPromptButtonSer,
     deletePromptButtonSer,
-    askPromptButton
+    askPromptButton,
+    scoreSectionsSemantically,
 }
 
