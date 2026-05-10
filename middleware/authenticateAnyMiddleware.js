@@ -3,7 +3,6 @@ const crypto = require('node:crypto');
 const { prisma } = require('../models/queries');
 
 const authenticateAny = async (req, res, next) => {
-    // Try API key first
     const apiKey = req.headers['x-api-key']
     if (apiKey) {
         const hashed = crypto.createHash('sha256').update(apiKey).digest('hex')
@@ -18,7 +17,6 @@ const authenticateAny = async (req, res, next) => {
         }
     }
 
-    // Try JWT token
     const token = req.headers['authorization']?.split(' ')[1]
     if (token) {
         try {

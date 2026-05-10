@@ -4,9 +4,12 @@ const {getLanguagesSer} = require("./operatorService")
 
 const generateReply = async (systemPrompt, chatHistory) => {
     const messages = [
-        { role: "system", content: systemPrompt },
+        {role: "system", content: systemPrompt},
         ...chatHistory,
-        { role: "user", content: "Generate your next reply as the customer. Be realistic, sometimes make your statements ambiguous. Reply with ONLY the chat message, nothing else." }
+        {
+            role: "user",
+            content: "Generate your next reply as the customer. Be realistic, sometimes make your statements ambiguous. Reply with ONLY the chat message, nothing else."
+        }
     ]
 
     const response = await fetch(OPENAI_URL, {
@@ -41,8 +44,11 @@ const translateAndDetect = async (text, targetLang) => {
         body: JSON.stringify({
             model: "gpt-4o-mini",
             messages: [
-                { role: "system", content: `You are a translator. Translate the following text to ${targetLang}. Respond ONLY in JSON format: {"translation": "...", "detected_lang": "..."}. No other text.` },
-                { role: "user", content: text }
+                {
+                    role: "system",
+                    content: `You are a translator. Translate the following text to ${targetLang}. Respond ONLY in JSON format: {"translation": "...", "detected_lang": "..."}. No other text.`
+                },
+                {role: "user", content: text}
             ]
         })
     })
@@ -174,12 +180,12 @@ const askPromptButton = async (operatorId, buttonId, threadId) => {
 
     console.log("Prompt button response:", data)
     console.log("content array:", JSON.stringify(message?.content, null, 2))
-    return { response: text, thread_id: data.id }
+    return {response: text, thread_id: data.id}
 }
 
 
 const scoreSectionsSemantically = async (messageText, catalog, snapshot) => {
-    const sections = catalog.map(s => ({ id: s.id, description: s.description }))
+    const sections = catalog.map(s => ({id: s.id, description: s.description}))
 
     const hint = summarizeSnapshotForAi(snapshot)
 
@@ -209,10 +215,10 @@ Respond with: {"scores": {"customer": 0.0, "session": 0.0, "url_trail": 0.0, "ca
         body: JSON.stringify({
             model: "gpt-4o-mini",
             temperature: 0.1,
-            response_format: { type: "json_object" },
+            response_format: {type: "json_object"},
             messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: userPrompt },
+                {role: "system", content: systemPrompt},
+                {role: "user", content: userPrompt},
             ],
         }),
     })
@@ -228,14 +234,14 @@ Respond with: {"scores": {"customer": 0.0, "session": 0.0, "url_trail": 0.0, "ca
 }
 
 function summarizeSnapshotForAi(snapshot) {
-    if (!snapshot) return "(no context available)"
+    if (!snapshot) return "no context available"
     const parts = []
-    if (snapshot.customer?.name)              parts.push(`name=${snapshot.customer.name}`)
-    if (snapshot.country || snapshot.city)    parts.push(`location=${[snapshot.city, snapshot.country].filter(Boolean).join(", ")}`)
+    if (snapshot.customer?.name) parts.push(`name=${snapshot.customer.name}`)
+    if (snapshot.country || snapshot.city) parts.push(`location=${[snapshot.city, snapshot.country].filter(Boolean).join(", ")}`)
     if (snapshot.cart_snapshot?.items?.length) parts.push(`cart_items=${snapshot.cart_snapshot.items.length}`)
-    if (snapshot.orders?.length)              parts.push(`past_orders=${snapshot.orders.length}`)
-    if (snapshot.url_trail?.length)           parts.push(`pages_browsed=${snapshot.url_trail.length}`)
-    return parts.length ? parts.join("; ") : "(empty snapshot)"
+    if (snapshot.orders?.length) parts.push(`past_orders=${snapshot.orders.length}`)
+    if (snapshot.url_trail?.length) parts.push(`pages_browsed=${snapshot.url_trail.length}`)
+    return parts.length ? parts.join("; ") : "empty snapshot"
 }
 
 

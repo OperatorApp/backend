@@ -24,19 +24,6 @@ function verifyToken(req, res, next) {
     }
 }
 
-
-function verifyUser(req, res, next) {
-    verify(req.token, process.env.SESSION_SECRET, (err, authData) => {
-        if(err) {
-            res.sendStatus(403);
-        } else {
-            next();
-        }
-    });
-}
-
-
-
 module.exports = {
     validPassword,
     genPassword,

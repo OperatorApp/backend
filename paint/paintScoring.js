@@ -1,4 +1,3 @@
-
 const { SECTION_CATALOG, SCORING_CONFIG } = require("./paintCatalog")
 const {scoreSectionsSemantically} = require("../service/aiService");
 
@@ -86,16 +85,6 @@ function computeEntityBoost(normalizedMessage, entities) {
     return boost
 }
 
-function computeSectionBoost(section, normalizedMessage, tokens, snapshot, language) {
-    const keywords = section.keywords?.[language] ?? section.keywords?.en ?? []
-    const entities = extractSectionEntities(snapshot, section.entity_paths)
-
-    const keywordBoost = computeKeywordBoost(tokens, keywords)
-    const entityBoost = computeEntityBoost(normalizedMessage, entities)
-
-    return Math.min(SCORING_CONFIG.PER_MESSAGE_BOOST_CAP, keywordBoost + entityBoost)
-}
-
 
 function getSenderWeight(senderType) {
     switch (senderType) {
@@ -106,25 +95,14 @@ function getSenderWeight(senderType) {
     }
 }
 
-
-function applyDecayToScore(prevScore, decayFactor) {
-    return prevScore * decayFactor
-}
-
 function decayAllScores(prevScores, catalog) {
     const decayed = {}
     for (const section of catalog) {
         const prior = prevScores[section.id] ?? 0
         const decay = section.decay ?? SCORING_CONFIG.DEFAULT_DECAY
-        decayed[section.id] = applyDecayToScore(prior, decay)
+        decayed[section.id] = prior* decay
     }
     return decayed
-}
-
-function clampScore(score) {
-    if (score < 0) return 0
-    if (score > 1) return 1
-    return score
 }
 
 async function computeNewScores({ prevScores, messageText, messageTextTranslated, snapshot, senderType, language }) {
@@ -183,7 +161,8 @@ async function computeNewScores({ prevScores, messageText, messageTextTranslated
         }
 
         const weightedBoost = combinedBoost * senderWeight
-        newScores[section.id] = clampScore(decayed[section.id] + weightedBoost)
+        let score = decayed[section.id] + weightedBoost
+        newScores[section.id] = score < 0 ? 0 : score > 1 ? 1 : score
     }
 
     return newScores
@@ -191,16 +170,5 @@ async function computeNewScores({ prevScores, messageText, messageTextTranslated
 
 
 module.exports = {
-    normalizeText,
-    tokenizeMessage,
-    resolvePath,
-    extractSectionEntities,
-    computeKeywordBoost,
-    computeEntityBoost,
-    computeSectionBoost,
-    getSenderWeight,
-    applyDecayToScore,
-    decayAllScores,
-    clampScore,
     computeNewScores,
 }
