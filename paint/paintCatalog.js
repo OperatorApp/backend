@@ -1,4 +1,3 @@
-// paintCatalog.js
 const SECTION_CATALOG = [
     {
         id: "customer",

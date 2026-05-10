@@ -2,7 +2,6 @@ const paintQueries = require("../models/queries")
 const { computeNewScores } = require("../paint/paintScoring")
 const { SCORING_CONFIG } = require("../paint/paintCatalog")
 
-// golden-angle trick for nice hue spread per thread
 function generateThreadHue(thread_id) {
     return (thread_id * 137.508) % 360
 }

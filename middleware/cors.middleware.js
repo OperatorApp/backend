@@ -1,4 +1,3 @@
-// cors.middleware.js
 const crypto = require('node:crypto')
 const { prisma } = require('../models/queries');
 
